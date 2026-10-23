@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VoxLua</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 9.5v13L16 29 4 22.5v-13z' fill='%23ffb000'/%3E%3Cpath d='M16 16 28 9.5v13L16 29z' fill='%23c77700'/%3E%3Cpath d='M16 16 4 9.5v13L16 29z' fill='%23e69500'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <header class="toolbar">
+      <div class="brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 28 9.5v13L16 29 4 22.5v-13z" class="c1"/><path d="M16 16 28 9.5v13L16 29z" class="c2"/><path d="M16 16 4 9.5v13L16 29z" class="c3"/></svg>
+        <span class="brand-name">VoxLua</span>
+      </div>
+
+      <div class="tb-group">
+        <div class="menu-wrap">
+          <button id="btn-file" class="has-menu" aria-haspopup="true">File</button>
+          <div class="menu" id="menu-file" role="menu">
+            <button class="menu-item" id="file-new">New model</button>
+            <button class="menu-item" id="file-open">Open file… <small>.lua script or .voxlua.json project (Ctrl+O)</small></button>
+            <button class="menu-item" id="file-open-folder">Open project folder…</button>
+            <button class="menu-item" id="file-save">Save <small>Ctrl+S</small></button>
+            <button class="menu-item" id="file-save-as">Save as… <small>Ctrl+Shift+S. Projects with several parts or animation save as a folder</small></button>
+            <button class="menu-item" id="file-rename">Rename… <small>Or click the name above the editor</small></button>
+          </div>
+        </div>
+        <div class="menu-wrap">
+          <button id="btn-examples" class="has-menu" aria-haspopup="true">Examples</button>
+          <div class="menu" id="menu-examples" role="menu"></div>
+        </div>
+        <div class="menu-wrap">
+          <button id="btn-textures" class="has-menu" aria-haspopup="true">Textures</button>
+          <div class="menu menu-form tex-menu" id="menu-textures">
+            <div class="form-title">Textures</div>
+            <div class="form-note">Use in scripts with <code>tex("name")</code>. PNG pixel art works best; transparent pixels become holes.</div>
+            <div class="tex-grid" id="tex-grid"></div>
+            <button id="tex-add" class="primary wide">Add images…</button>
+            <div class="form-note">You can also drop image files anywhere on the window.</div>
+            <div class="form-note tex-error" id="tex-error" hidden></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <div class="seg mode-seg" id="mode-seg" role="radiogroup" aria-label="Mode">
+        <button data-mode="model" role="radio" title="Model: write scripts (animation tools hidden)">Model</button>
+        <button data-mode="animate" role="radio" title="Animate: timeline, posing gizmo and the Animation tab">Animate</button>
+      </div>
+
+      <div class="tb-sep"></div>
+
+      <div class="tb-group">
+        <button id="btn-run" class="primary" title="Run (Ctrl+Enter)">&#9654; Run</button>
+        <label class="check" title="Re-run while you type"><input type="checkbox" id="chk-autorun" /> <span class="lbl">Auto-run</span></label>
+        <label class="field" title="Grid radius: x, y, z go from -R to R"><span class="lbl">Grid</span> <select id="sel-radius"></select></label>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="tb-group">
+        <div class="menu-wrap">
+          <button id="btn-export" class="has-menu" aria-haspopup="true">Export</button>
+          <div class="menu menu-form" id="menu-export">
+            <div class="form-title">Export model</div>
+            <label class="row">Format
+              <select id="exp-format">
+                <option value="glb">GLB (recommended for Godot)</option>
+                <option value="obj">OBJ + MTL</option>
+              </select>
+            </label>
+            <label class="row">Voxel size
+              <span class="with-unit"><input id="exp-scale" type="number" min="0.001" step="0.01" /> m</span>
+            </label>
+            <label class="row">Origin
+              <select id="exp-origin">
+                <option value="bottom">Bottom center (stands on y = 0)</option>
+                <option value="center">Center of model</option>
+                <option value="grid">Grid center (0, 0, 0)</option>
+              </select>
+            </label>
+            <label class="check anim-only-option"><input type="checkbox" id="exp-anim" /> Include animations (GLB)</label>
+            <label class="check anim-only-option" title="Godot imports clips whose name ends in _loop as looping"><input type="checkbox" id="exp-loop" /> Add _loop to looping clips</label>
+            <div class="form-note" id="exp-note"></div>
+            <button id="exp-go" class="primary wide">Export</button>
+          </div>
+        </div>
+
+        <div class="menu-wrap">
+          <button id="btn-sound" class="has-menu" aria-haspopup="true">Sound</button>
+          <div class="menu menu-form" id="menu-sound">
+            <div class="form-title">Typing sounds</div>
+            <label class="check"><input type="checkbox" id="snd-enabled" /> Click sound while typing</label>
+            <label class="row">Style <select id="snd-profile"></select></label>
+            <label class="row">Volume <input id="snd-volume" type="range" min="0" max="1" step="0.05" /></label>
+            <button id="snd-test" class="wide">Try it</button>
+          </div>
+        </div>
+
+        <div class="seg" id="theme-seg" role="radiogroup" aria-label="Theme">
+          <button data-theme-btn="light" role="radio">Light</button>
+          <button data-theme-btn="amber" role="radio">Amber</button>
+          <button data-theme-btn="dark" role="radio">Dark</button>
+        </div>
+        <button id="btn-help" title="Script reference">Help</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="pane-left">
+        <div class="file-tab">
+          <span id="file-name" class="project-name">untitled</span><span id="dirty" class="dirty" title="Unsaved changes"></span>
+          <div class="tabs" id="tabs" role="tablist"></div>
+          <button id="tab-add" class="ghost small" title="Add a part (its own voxel() script)">+ Part</button>
+          <span class="spacer"></span>
+          <button id="font-down" class="ghost small" title="Smaller text">A&minus;</button>
+          <button id="font-up" class="ghost small" title="Larger text">A+</button>
+        </div>
+        <div id="editor"></div>
+        <div class="console" id="console">
+          <div class="console-head">
+            <button id="btn-console" class="ghost small">Console</button>
+            <span class="spacer"></span>
+            <button id="btn-clear" class="ghost small">Clear</button>
+          </div>
+          <div class="console-body" id="console-body"></div>
+        </div>
+      </section>
+
+      <div class="splitter" id="splitter" role="separator" aria-orientation="vertical"></div>
+
+      <section class="pane-right">
+        <div id="viewport"></div>
+        <div class="vp-tools">
+          <button id="btn-frame" class="glass" title="Reset camera">Frame</button>
+          <button id="btn-axes" class="glass" title="Show the bounding box with X / Y / Z coordinates">Axes</button>
+          <button id="btn-cells" class="glass" title="Outline every cube">Cells</button>
+          <button id="btn-grid" class="glass" title="Show grid">Grid</button>
+          <button id="btn-spin" class="glass" title="Turntable rotation">Spin</button>
+        </div>
+        <div class="vp-badge" id="vp-stale" hidden>Error: showing the last working model</div>
+        <div class="vp-empty" id="vp-empty" hidden>voxel() returned empty for every cell</div>
+        <div class="vp-coords" id="vp-coords" hidden></div>
+        <div class="drop-hint" id="drop-hint" hidden>Drop images to add textures, or a .lua / .voxlua.json file to open it</div>
+        <div class="vp-hint">Drag to orbit &middot; Right-drag to pan &middot; Scroll to zoom</div>
+      </section>
+    </main>
+
+    <section id="timeline" hidden></section>
+
+    <div class="menu menu-form part-menu" id="part-menu">
+      <div class="form-title">Part settings</div>
+      <label class="row">Name <input id="part-name" type="text" spellcheck="false" /></label>
+      <label class="row">Parent
+        <select id="part-parent"></select>
+      </label>
+      <div class="row">Pivot
+        <span class="xyz">
+          <input id="part-px" type="number" step="0.5" class="axis-x" title="x" />
+          <input id="part-py" type="number" step="0.5" class="axis-y" title="y" />
+          <input id="part-pz" type="number" step="0.5" class="axis-z" title="z" />
+        </span>
+      </div>
+      <div class="form-note">The pivot is the point the part rotates and scales around. A part moves with its parent. You can also drag the pivot in Animate mode (Pivot tool).</div>
+      <button id="part-delete" class="wide danger">Delete part</button>
+    </div>
+
+    <footer class="status">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">Starting Lua&hellip;</span>
+      <span class="spacer"></span>
+      <span id="status-stats"></span>
+    </footer>
+
+    <dialog id="help">
+      <div class="help-head">
+        <h2>Script reference</h2>
+        <button id="help-close" class="ghost">Close</button>
+      </div>
+      <div class="help-body" id="help-body"></div>
+    </dialog>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

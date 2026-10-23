@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "sword",
+  "description": "Parts with pivots and parents, plus two clips: idle (loop) and slash, with a flame that bursts out",
+  "parts": [
+    { "name": "handle", "file": "parts/handle.lua", "pivot": [0, -9, 0], "parent": null },
+    { "name": "blade", "file": "parts/blade.lua", "pivot": [0, -4, 0], "parent": "handle" },
+    { "name": "gem", "file": "parts/gem.lua", "pivot": [0, -5.5, 2], "parent": "handle" },
+    { "name": "flame", "file": "parts/flame.lua", "pivot": [0, 3, 0], "parent": "blade" }
+  ],
+  "animation": "animations.lua"
+}
